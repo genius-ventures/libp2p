@@ -58,17 +58,6 @@ namespace custom_protocol {
      */
     void stop();
 
-    /**
-     * Write message to the other side
-     * @param message to be written
-     * @return nothing on success, error otherwise
-     *
-     * @note error, which is returned from this method, is about, for instance,
-     * a closed stream or connection, but not the actual "network" error - they
-     * are reported via bus
-     */
-    outcome::result<void> write(std::string message);
-
     enum class Error {
       STREAM_CLOSED_FOR_READS = 1,  // 0 is reserved for success
       STREAM_CLOSED_FOR_WRITES
@@ -78,7 +67,13 @@ namespace custom_protocol {
     /**
      * Read message from the chat and write it into the output stream
      */
-    void readNextMessage() const;
+    void readNextMessage();
+
+    /**
+     * Ask the user to write message into the console and send it to the other
+     * side
+     */
+    void writeNextMessage();
 
     /**
      * Write next queued message to the chat

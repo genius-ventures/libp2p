@@ -6,10 +6,7 @@
 #include "chat_protocol.hpp"
 
 namespace custom_protocol {
-  ChatProtocol::ChatProtocol(
-      std::function<void(std::shared_ptr<ChatSession>)> new_session_handler,
-      ChatConfig config)
-      : new_session_handler_{std::move(new_session_handler)}, config_{config} {}
+  ChatProtocol::ChatProtocol(ChatConfig config) : config_{config} {}
 
   libp2p::peer::Protocol ChatProtocol::getProtocolId() const {
     return "/chat/1.0.0";
@@ -23,9 +20,9 @@ namespace custom_protocol {
     }
 
     auto session =
-        std::make_shared<ChatSession>(std::move(stream_res.value(), config_));
+        std::make_shared<ChatSession>(std::move(stream_res.value()), config_);
     session->start();
-    new_session_handler_(std::move(session));
+    sessions_.push_back(std::move(session));
   }
 
   outcome::result<std::shared_ptr<ChatSession>> ChatProtocol::startChatting(

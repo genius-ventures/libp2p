@@ -25,13 +25,9 @@ namespace custom_protocol {
    public:
     /**
      * Create an instance of Chat protocol
-     * @param new_session_handler - function, which is called, when a chat
-     * session is opened from the other side
      * @param config, with which each chat session will be created
      */
-    ChatProtocol(
-        std::function<void(std::shared_ptr<ChatSession>)> new_session_handler,
-        ChatConfig config);
+    explicit ChatProtocol(ChatConfig config);
 
     libp2p::peer::Protocol getProtocolId() const override;
 
@@ -45,9 +41,10 @@ namespace custom_protocol {
         std::shared_ptr<libp2p::connection::Stream> stream) const;
 
    private:
-    std::function<void(std::shared_ptr<ChatSession>)> new_session_handler_;
     ChatConfig config_;
     libp2p::common::Logger log_ = libp2p::common::createLogger("ChatProtocol");
+
+    std::vector<std::shared_ptr<ChatSession>> sessions_;
   };
 }  // namespace custom_protocol
 

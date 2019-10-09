@@ -6,8 +6,7 @@
 #ifndef LIBP2P_CHAT_CONFIG_HPP
 #define LIBP2P_CHAT_CONFIG_HPP
 
-#include <iostream>
-#include <ostream>
+#include <cstdint>
 
 #include <libp2p/event/bus.hpp>
 
@@ -21,10 +20,6 @@ namespace custom_protocol {
 
     /// maximum size of one message
     size_t max_message_size = 2u << 22u;  // 4 MB
-
-    /// stream, to which Chat will write output; cout by default, but can also
-    /// be, for example, file stream or something else
-    std::ostream &out_stream = std::cout;
   };
 }  // namespace custom_protocol
 
