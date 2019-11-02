@@ -29,7 +29,7 @@ set(
 include(${CMAKE_CURRENT_LIST_DIR}/HunterGate.cmake)
 
 HunterGate(
-    URL "https://github.com/cpp-pm/hunter/archive/v0.23.216.tar.gz"
-    SHA1 "a492a1879bee60c29f7af17ef56b45f0d7766241"
+    URL "https://github.com/cpp-pm/hunter/archive/v0.23.217.tar.gz"
+    SHA1 "4b36c0f8ffc8f3b5718d5e24629fb40c56c99b13"
     LOCAL
 )
