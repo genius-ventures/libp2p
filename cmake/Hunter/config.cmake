@@ -11,14 +11,14 @@ hunter_config(GSL
 
 hunter_config(
     GTest
-    VERSION 1.8.0-hunter-p11
-    CMAKE_ARGS "CMAKE_CXX_FLAGS=-Wno-deprecated-copy"
+    VERSION 1.10.0
+    CMAKE_ARGS "CMAKE_CXX_FLAGS=-Wno-deprecated"
 )
 
 hunter_config(
     spdlog
-    URL https://github.com/gabime/spdlog/archive/v1.4.2.zip
-    SHA1 4b10e9aa17f7d568e24f464b48358ab46cb6f39c
+    URL https://github.com/hunter-packages/spdlog/archive/v1.4.2-p0.tar.gz
+    SHA1 61136ee6120fe069d37df4ad11628a2a0622b447
 )
 
 hunter_config(
