@@ -11,6 +11,11 @@
 
 namespace libp2p::protocol::gossip {
 
+  // need to define default ctor/dtor here in translation unit due to unique_ptr
+  // to type which is incomplete in header
+  MessageParser::MessageParser() = default;
+  MessageParser::~MessageParser() = default;
+
   bool MessageParser::parse(gsl::span<const uint8_t> bytes) {
     if (!pb_msg_) {
       pb_msg_ = std::make_unique<pubsub::pb::RPC>();

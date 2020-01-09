@@ -50,7 +50,7 @@ namespace libp2p::protocol::gossip {
     size_t max_message_size = 1 << 24;
 
     /// Protocol version
-    std::string protocol_version = "/ipfs/gossip/1.0.0";
+    std::string protocol_version = "/meshsub/1.0.0";
   };
 
   using common::ByteArray;
@@ -64,10 +64,10 @@ namespace libp2p::protocol::gossip {
    public:
     virtual ~Gossip() = default;
 
-    /// Starts instance
+    /// Starts client and server
     virtual void start() = 0;
 
-    /// Stops instance
+    /// Stops client and server
     virtual void stop() = 0;
 
     /// Message received on subscription.

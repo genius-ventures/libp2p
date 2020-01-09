@@ -70,7 +70,9 @@ namespace libp2p::protocol {
       return newTicket(delay, cb_in_progress_);
     }
     auto it = table_.find(ticket);
+
     assert(it != table_.end());
+
     auto cb = std::move(it->second);
     table_.erase(it);
     return newTicket(delay, std::move(cb));

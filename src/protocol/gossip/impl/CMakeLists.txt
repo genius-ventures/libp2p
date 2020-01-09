@@ -5,9 +5,16 @@ libp2p_add_library(p2p_gossip
     common.cpp
     message_builder.cpp
     message_parser.cpp
+    gossip_core.cpp
+    local_subscriptions.cpp
+    remote_subscriptions.cpp
+    topic_subscriptions.cpp
     peer_set.cpp
     peer_context.cpp
     message_cache.cpp
+    connectivity.cpp
+    stream_reader.cpp
+    stream_writer.cpp
     )
 target_link_libraries(p2p_gossip
     Boost::boost
