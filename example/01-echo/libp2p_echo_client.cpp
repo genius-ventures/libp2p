@@ -29,7 +29,8 @@ int main(int argc, char *argv[]) {
   libp2p::protocol::Echo echo{libp2p::protocol::EchoConfig{1}};
 
   // create a default Host via an injector
-  auto injector = libp2p::injector::makeHostInjector();
+  auto injector = libp2p::injector::makeHostInjector(
+      libp2p::injector::useMuxerAdaptors<libp2p::muxer::Mplex>());
   auto host = injector.create<std::shared_ptr<libp2p::Host>>();
 
   // create io_context - in fact, thing, which allows us to execute async
@@ -77,10 +78,18 @@ int main(int argc, char *argv[]) {
           std::cout << "SENDING 'Hello from C++!'\n";
           echo_client->sendAnd(
               "Hello from C++!\n",
-              [stream = std::move(stream_p)](auto &&response_result) {
+              [echo_client{std::move(echo_client)},
+               stream = std::move(stream_p)](auto &&response_result) {
                 std::cout << "RESPONSE " << response_result.value()
                           << std::endl;
-                stream->close([](auto &&) { std::exit(EXIT_SUCCESS); });
+                std::cout << "SENDING 'Hello again from C++!'\n";
+                echo_client->sendAnd(
+                    "Hello again from C++!\n",
+                    [stream](auto &&response_result) {
+                      std::cout << "2nd RESPONSE " << response_result.value()
+                                << std::endl;
+                      stream->close([](auto &&) { std::exit(EXIT_SUCCESS); });
+                    });
               });
         });
   });
