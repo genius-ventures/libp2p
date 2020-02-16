@@ -8,6 +8,8 @@
 #include <libp2p/network/connection_manager.hpp>
 #include <libp2p/protocol/kademlia/impl/kad_server.hpp>
 
+#include <spdlog/spdlog.h>
+
 namespace libp2p::protocol::kademlia {
 
   std::array<KadServer::RequestHandler, Message::kTableSize>

@@ -10,6 +10,9 @@
 #include <libp2p/protocol/gossip/impl/connectivity.hpp>
 #include <libp2p/protocol/gossip/impl/message_builder.hpp>
 
+#define SPDLOG_TRACE_ON
+#include <spdlog/spdlog.h>
+
 namespace libp2p::protocol::gossip {
 
   RemoteSubscriptions::RemoteSubscriptions(const Config &config,
