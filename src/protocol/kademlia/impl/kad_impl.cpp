@@ -68,7 +68,6 @@ namespace libp2p::protocol::kademlia {
               if (auto c = conn.lock()) {
                 // adding outbound connections only
                 if (c->isInitiator()) {
-                  log_.debug("new outbound connection");
                   auto remote_peer_res = c->remotePeer();
                   if (!remote_peer_res) {
                     return;
@@ -99,10 +98,7 @@ namespace libp2p::protocol::kademlia {
     }
     std::string id_str = peer_info.id.toBase58();
     if (res) {
-      log_.debug("successfully added peer to table: {}", id_str);
     } else {
-      log_.debug("failed to add peer to table: {} : {}", id_str,
-                 res.error().message());
     }
   }
 
@@ -113,7 +109,6 @@ namespace libp2p::protocol::kademlia {
   KadImpl::Session *KadImpl::findSession(connection::Stream *from) {
     auto it = sessions_.find(from);
     if (it == sessions_.end()) {
-      log_.warn("cannot find session by stream");
       return nullptr;
     }
     return &it->second;
@@ -163,9 +158,6 @@ namespace libp2p::protocol::kademlia {
                                           outcome::failure(res.error()));
     }
 
-    log_.debug("client session completed, total sessions: {}",
-               sessions_.size() - 1);
-
     closeSession(from);
   }
 
@@ -202,12 +194,8 @@ namespace libp2p::protocol::kademlia {
 
     void onResult(const peer::PeerId &from,
                   outcome::result<Message> result) override {
-      log_.debug("{} waiting for {} responses", from.toBase58(),
-                 waiting_for_.size());
       waiting_for_.erase(from);
       if (!result) {
-        log_.warn("request to {} failed: {}", from.toBase58(),
-                  result.error().message());
       } else {
         Message &msg = result.value();
         size_t n = 0;
@@ -231,14 +219,11 @@ namespace libp2p::protocol::kademlia {
             }
           }
         }
-        log_.debug("{} returned {} records, waiting for {} responses",
-                   from.toBase58(), n, waiting_for_.size());
       }
       if (callback_ && (result_.success || waiting_for_.empty())) {
         callback_(key_, std::move(result_));
         callback_ = Kad::FindPeerQueryResultFunc();
       } else {
-        log_.debug("...");
       }
     }
 
@@ -253,8 +238,6 @@ namespace libp2p::protocol::kademlia {
 
   bool KadImpl::findPeer(const peer::PeerId &peer,
                          Kad::FindPeerQueryResultFunc f) {
-    log_.debug("new {} request", __FUNCTION__);
-
     auto pi = host_->getPeerRepository().getPeerInfo(peer);
     if (!pi.addresses.empty()) {
       // found locally, ids are sorted by distance
@@ -268,13 +251,11 @@ namespace libp2p::protocol::kademlia {
               [f = std::move(f), p = peer, r = std::move(result)] { f(p, r); })
           .detach();
 
-      log_.info("{} found locally from host!", peer.toBase58());
       return true;
     }
 
     auto ids = table_->getNearestPeers(NodeId(peer), 20);
     if (ids.empty()) {
-      log_.info("{} : no peers", peer.toBase58());
       return false;
     }
 
@@ -293,7 +274,6 @@ namespace libp2p::protocol::kademlia {
               [f = std::move(f), p = peer, r = std::move(result)] { f(p, r); })
           .detach();
 
-      log_.info("{} found locally", peer.toBase58());
       return true;
     }
 
@@ -316,7 +296,6 @@ namespace libp2p::protocol::kademlia {
     }
 
     if (v.empty()) {
-      log_.info("{} : no peers to connect to", peer.toBase58());
       return false;
     }
 
@@ -337,7 +316,6 @@ namespace libp2p::protocol::kademlia {
     KadProtocolSession::Buffer buffer =
         std::make_shared<std::vector<uint8_t>>();
     if (!request.serialize(*buffer)) {
-      log_.error("serialize error");
       return false;
     }
 
@@ -387,17 +365,10 @@ namespace libp2p::protocol::kademlia {
 
     void onResult(const peer::PeerId &from,
                   outcome::result<Message> result) override {
-      log_.debug("{} waiting for {} responses", from.toBase58(),
-                 waiting_for_.size());
       waiting_for_.erase(from);
       if (!result) {
-        log_.warn("request to {} failed: {}", from.toBase58(),
-                  result.error().message());
       } else {
         Message &msg = result.value();
-
-        log_.debug("response from {}, waiting for {} responses",
-                   from.toBase58(), waiting_for_.size());
 
         if (msg.provider_peers) {
           for (auto &p : msg.provider_peers.value()) {
@@ -426,7 +397,6 @@ namespace libp2p::protocol::kademlia {
         callback_(Error::VALUE_NOT_FOUND);
         callback_ = Kad::GetValueResultFunc();
       } else {
-        log_.debug("...");
       }
     }
 
@@ -476,8 +446,6 @@ namespace libp2p::protocol::kademlia {
     KadProtocolSession::Buffer buffer =
         std::make_shared<std::vector<uint8_t>>();
     if (!request.serialize(*buffer)) {
-      log_.error("serialize error");
-
       scheduler_
           ->schedule([f = std::move(f)] { f(Error::MESSAGE_SERIALIZE_ERROR); })
           .detach();
@@ -513,8 +481,6 @@ namespace libp2p::protocol::kademlia {
     }
 
     void onResult(const peer::PeerId &from, outcome::result<Message>) override {
-      log_.warn("unexpected response to broadcast request from {}",
-                from.toBase58());
     }
 
     SubLogger log_;
@@ -534,7 +500,6 @@ namespace libp2p::protocol::kademlia {
     KadProtocolSession::Buffer buffer =
         std::make_shared<std::vector<uint8_t>>();
     if (!request.serialize(*buffer)) {
-      log_.error("serialize error");
       return;
     }
 
@@ -562,8 +527,6 @@ namespace libp2p::protocol::kademlia {
                         const KadProtocolSession::Buffer &request) {
     uint64_t id = ++connecting_sessions_counter_;
 
-    log_.debug("connecting to {}, {}", pi.id.toBase58(), handler.use_count());
-
     host_->newStream(pi, protocol_,
                      [wptr = weak_from_this(), this, id, r = request,
                       peerId = pi.id](auto &&stream_res) {
@@ -583,14 +546,12 @@ namespace libp2p::protocol::kademlia {
       KadProtocolSession::Buffer request) {
     auto it = connecting_sessions_.find(id);
     if (it == connecting_sessions_.end()) {
-      log_.warn("cannot find connecting session {}", id);
       return;
     }
     auto handler = it->second;
     connecting_sessions_.erase(it);
 
     if (!stream_res) {
-      log_.warn("cannot connect to server: {}", stream_res.error().message());
       handler->onResult(peerId, outcome::failure(stream_res.error()));
       return;
     }
@@ -600,13 +561,10 @@ namespace libp2p::protocol::kademlia {
     assert(sessions_.find(stream) == sessions_.end());
 
     std::string addr(stream->remoteMultiaddr().value().getStringAddress());
-    log_.debug("connected to {}, ({} - {})", addr,
-               stream_res.value().use_count(), connecting_sessions_.size());
 
     auto protocol_session = std::make_shared<KadProtocolSession>(
         weak_from_this(), std::move(stream_res.value()));
     if (!protocol_session->write(std::move(request))) {
-      log_.warn("write to {} failed", addr);
       assert(stream->remotePeerId());
       handler->onResult(peerId, Error::STREAM_RESET);
       return;
@@ -615,7 +573,6 @@ namespace libp2p::protocol::kademlia {
 
     sessions_[stream] =
         Session{std::move(protocol_session), std::move(handler)};
-    log_.debug("total sessions: {}", sessions_.size());
   }
 
 }  // namespace libp2p::protocol::kademlia

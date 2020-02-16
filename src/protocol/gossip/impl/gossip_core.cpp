@@ -148,16 +148,12 @@ namespace libp2p::protocol::gossip {
                                   const TopicId &topic) {
     assert(started_);
 
-    log_.debug("peer {} {}subscribed, topic {}", peer->str,
-               (subscribe ? "" : "un"), topic);
     remote_subscriptions_->onPeerSubscribed(peer, subscribe, topic);
   }
 
   void GossipCore::onIHave(const PeerContextPtr &from, const TopicId &topic,
                            const MessageId &msg_id) {
     assert(started_);
-
-    log_.debug("peer {} has msg for topic {}", from->str, topic);
 
     if (remote_subscriptions_->hasTopic(topic)
         && !msg_cache_.contains(msg_id)) {
@@ -168,29 +164,22 @@ namespace libp2p::protocol::gossip {
 
   void GossipCore::onIWant(const PeerContextPtr &from,
                            const MessageId &msg_id) {
-    log_.debug("peer {} wants message", from->str);
-
     auto msg_found = msg_cache_.getMessage(msg_id);
     if (msg_found) {
       from->message_to_send->addMessage(*msg_found.value(), msg_id);
       connectivity_->peerIsWritable(from, true);
     } else {
-      log_.warn("wanted message not in cache");
     }
   }
 
   void GossipCore::onGraft(const PeerContextPtr &from, const TopicId &topic) {
     assert(started_);
 
-    log_.debug("graft from peer {} for topic {}", from->str, topic);
-
     remote_subscriptions_->onGraft(from, topic);
   }
 
   void GossipCore::onPrune(const PeerContextPtr &from, const TopicId &topic) {
     assert(started_);
-
-    log_.debug("prune from peer {} for topic {}", from->str, topic);
 
     remote_subscriptions_->onPrune(from, topic);
   }
@@ -211,11 +200,8 @@ namespace libp2p::protocol::gossip {
     MessageId msg_id = createMessageId(*msg);
     if (!msg_cache_.insert(msg, msg_id)) {
       // already there, ignore
-      log_.debug("ignoring message from peer {}, already in cache", from->str);
       return;
     }
-
-    log_.debug("forwarding message from peer {}", from->str);
 
     local_subscriptions_->forwardMessage(msg);
     remote_subscriptions_->onNewMessage(from, msg, msg_id);
@@ -223,8 +209,6 @@ namespace libp2p::protocol::gossip {
 
   void GossipCore::onMessageEnd(const PeerContextPtr &from) {
     assert(started_);
-
-    log_.debug("finished dispatching message from peer {}", from->str);
 
     // Apply immediate send operation to affected peers
     connectivity_->flush();
@@ -251,7 +235,6 @@ namespace libp2p::protocol::gossip {
 
 
     if (connected) {
-      log_.debug("peer {} connected", ctx->str);
       // notify the new peer about all topics we subscribed to
       if (!local_subscriptions_->subscribedTo().empty()) {
         for (auto &local_sub : local_subscriptions_->subscribedTo()) {
@@ -261,7 +244,6 @@ namespace libp2p::protocol::gossip {
         connectivity_->flush();
       }
     } else {
-      log_.debug("peer {} disconnected", ctx->str);
       remote_subscriptions_->onPeerDisconnected(ctx);
     }
   }

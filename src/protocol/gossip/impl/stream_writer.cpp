@@ -78,8 +78,6 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
-    TRACE("written {} bytes to peer {}", res.value(), peer_->str);
-
     if (writing_bytes_ != res.value()) {
       feedback_(peer_, Error::MESSAGE_WRITE_ERROR);
       return;
@@ -100,8 +98,6 @@ namespace libp2p::protocol::gossip {
 
     auto data = buffer->data();
     writing_bytes_ = buffer->size();
-
-    TRACE("writing {} bytes to peer {}", writing_bytes_, peer_->str);
 
     // clang-format off
     stream_->write(

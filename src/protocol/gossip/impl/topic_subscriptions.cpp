@@ -50,8 +50,6 @@ namespace libp2p::protocol::gossip {
 
     if (is_published_locally) {
       fanout_period_ends_ = now + config_.seen_cache_lifetime_msec;
-      log_.debug("setting fanout period for {}, {}->{}", topic_, now,
-                 fanout_period_ends_);
     }
 
     auto origin = peerFrom(*msg);
@@ -81,9 +79,6 @@ namespace libp2p::protocol::gossip {
     });
 
     seen_cache_.emplace_back(now + config_.seen_cache_lifetime_msec, msg_id);
-
-    log_.debug("message forwarded, topic={}, m={}, s={}", topic_,
-               mesh_peers_.size(), subscribed_peers_.size());
   }
 
   void TopicSubscriptions::onHeartbeat(Time now) {
@@ -110,7 +105,6 @@ namespace libp2p::protocol::gossip {
     // to save space and traffic
     if (fanout_period_ends_ != 0 && fanout_period_ends_ < now) {
       fanout_period_ends_ = 0;
-      log_.debug("fanout period reset for {}", topic_);
     }
 
     // shift msg ids cache
@@ -119,7 +113,6 @@ namespace libp2p::protocol::gossip {
                              [now](const auto &p) { return p.first >= now; });
       if (it != seen_cache_.begin()) {
         seen_cache_.erase(seen_cache_.begin(), it);
-        log_.debug("seen cache size={} for {}", seen_cache_.size(), topic_);
       }
     }
   }
@@ -128,7 +121,6 @@ namespace libp2p::protocol::gossip {
     self_subscribed_ = self_subscribed;
     if (!self_subscribed_) {
       // remove the mesh
-      log_.debug("removing mesh for {}", topic_);
       mesh_peers_.selectAll(
           [this](const PeerContextPtr &p) { removeFromMesh(p); });
       mesh_peers_.clear();
@@ -191,8 +183,6 @@ namespace libp2p::protocol::gossip {
     p->message_to_send->addGraft(topic_);
     connectivity_.peerIsWritable(p, false);
     mesh_peers_.insert(p);
-    log_.debug("peer {} added to mesh (size={}) for topic {}", p->str,
-               mesh_peers_.size(), topic_);
   }
 
   void TopicSubscriptions::removeFromMesh(const PeerContextPtr &p) {
@@ -201,8 +191,6 @@ namespace libp2p::protocol::gossip {
     p->message_to_send->addPrune(topic_);
     connectivity_.peerIsWritable(p, false);
     subscribed_peers_.insert(p);
-    log_.debug("peer {} removed from mesh (size={}) for topic {}", p->str,
-               mesh_peers_.size(), topic_);
   }
 
 }  // namespace libp2p::protocol::gossip

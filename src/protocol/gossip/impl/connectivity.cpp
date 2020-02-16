@@ -73,8 +73,6 @@ namespace libp2p::protocol::gossip {
         }
     );
     // clang-format on
-
-    log_.info("started");
   }
 
   void Connectivity::stop() {
@@ -147,8 +145,6 @@ namespace libp2p::protocol::gossip {
     }
 
     if (!rstream) {
-      log_.info("incoming connection failed due to '{}'",
-                rstream.error().message());
       return;
     }
     auto &stream = rstream.value();
@@ -157,13 +153,7 @@ namespace libp2p::protocol::gossip {
 
     auto peer_res = stream->remotePeerId();
     if (!peer_res) {
-      log_.info(" connection from '{}' failed: {}",
-                stream->remoteMultiaddr().value().getStringAddress(),
-                peer_res.error().message());
     } else {
-      log_.debug(" connection from '{}', peer_id={}",
-                 stream->remoteMultiaddr().value().getStringAddress(),
-                 peer_res.value().toBase58());
     }
     auto &peer_id = peer_res.value();
 
@@ -172,7 +162,6 @@ namespace libp2p::protocol::gossip {
     auto ctx_found = all_peers_.find(peer_id);
     if (!ctx_found) {
       if (readers_.size() >= config_.max_connections_num) {
-        log_.debug("too many connections, refusing");
         return;
       }
       ctx = std::make_shared<PeerContext>(peer_id);
@@ -254,9 +243,7 @@ namespace libp2p::protocol::gossip {
 
     if (can_connect != C::CONNECTED && can_connect != C::CAN_CONNECT) {
       if (connection_must_exist) {
-        log_.error("connection must exist but not found for {}", ctx->str);
       } else {
-        log_.debug("{} is not connectable at the moment", ctx->str);
       }
       return;
     }
@@ -285,8 +272,6 @@ namespace libp2p::protocol::gossip {
 
     assert(ctx);
 
-    log_.info("banning peer {}", ctx->str);
-
     auto ts = scheduler_->now() + kBanInterval;
     ctx->banned_until = ts;
     ctx->message_to_send->clear();
@@ -299,8 +284,6 @@ namespace libp2p::protocol::gossip {
 
     assert(ts > 0);
 
-    log_.info("unbanning peer {}", ctx->str);
-
     banned_peers_expiration_.erase({ts, ctx});
     ctx->banned_until = 0;
   }
@@ -312,18 +295,13 @@ namespace libp2p::protocol::gossip {
 
     auto ctx_found = connecting_peers_.erase(ctx->peer_id);
     if (!ctx_found) {
-      log_.error("cannot find connecting peer {}", ctx->str);
       return;
     }
 
     if (!rstream) {
-      log_.info("cannot connect, peer={}, error={}", ctx->str,
-                rstream.error().message());
       ban(std::move(ctx));
       return;
     }
-
-    log_.debug("outbound stream connected for {}", ctx->str);
 
     ctx->writer =
         std::make_shared<StreamWriter>(config_, *scheduler_, on_writer_event_,
@@ -349,8 +327,6 @@ namespace libp2p::protocol::gossip {
       // do nothing at the moment, keep it connected
       return;
     }
-    log_.info("inbound stream error='{}', peer={}", event.error().message(),
-              from->str);
 
     // TODO(artem): ban incoming peers for protocol violations etc.
 
@@ -371,11 +347,8 @@ namespace libp2p::protocol::gossip {
       // do nothing at the moment, keep it connected
       return;
     }
-    log_.info("outbound stream error='{}', peer={}", event.error().message(),
-              from->str);
 
     if (!connected_peers_.erase(from->peer_id)) {
-      log_.debug("peer not found for {}", from->str);
       return;
     }
 

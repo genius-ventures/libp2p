@@ -36,15 +36,10 @@ namespace libp2p::protocol::kademlia {
 
   void KadServer::handle(StreamResult rstream) {
     if (!rstream) {
-      log_.info("incoming connection failed due to '{}'",
-                rstream.error().message());
       return;
     }
 
     auto stream = rstream.value();
-
-    log_.debug("incoming connection from '{}'",
-               stream->remoteMultiaddr().value().getStringAddress());
 
     connection::Stream *s = stream.get();
     assert(sessions_.find(s) == sessions_.end());
@@ -61,7 +56,6 @@ namespace libp2p::protocol::kademlia {
   KadProtocolSession::Ptr KadServer::findSession(connection::Stream *from) {
     auto it = sessions_.find(from);
     if (it == sessions_.end()) {
-      log_.warn("cannot find session by stream");
       return nullptr;
     }
     return it->second;
@@ -71,9 +65,6 @@ namespace libp2p::protocol::kademlia {
     auto session = findSession(from);
     if (!session)
       return;
-
-    log_.debug("request from '{}', type = {}",
-               from->remoteMultiaddr().value().getStringAddress(), msg.type);
 
     bool close_session = (msg.type >= Message::kTableSize)
         || (not(this->*(request_handlers_table[msg.type]))(msg))  // NOLINT
@@ -91,8 +82,6 @@ namespace libp2p::protocol::kademlia {
     auto session = findSession(from);
     if (!session)
       return;
-    log_.debug("server session completed, total sessions: {}",
-               sessions_.size() - 1);
     closeSession(from);
   }
 
@@ -105,8 +94,6 @@ namespace libp2p::protocol::kademlia {
   }
 
   bool KadServer::onPutValue(Message &msg) {
-    log_.info("{}", __FUNCTION__);
-
     if (!msg.record) {
       return false;
     }
@@ -116,15 +103,12 @@ namespace libp2p::protocol::kademlia {
 
     auto res = kad_.getLocalValueStore().putValue(r.key, r.value);
     if (!res) {
-      log_.info("onPutValue failed due to '{}'", res.error().message());
     }
 
     return false;  // no response
   }
 
   bool KadServer::onGetValue(Message &msg) {
-    log_.info("{}", __FUNCTION__);
-
     if (msg.key.empty()) {
       return false;
     }
@@ -172,8 +156,6 @@ namespace libp2p::protocol::kademlia {
   }
 
   bool KadServer::onAddProvider(Message &msg) {
-    log_.info("{}", __FUNCTION__);
-
     // TODO(artem): validate against sender id
 
     if (!msg.provider_peers) {
@@ -190,8 +172,6 @@ namespace libp2p::protocol::kademlia {
   }
 
   bool KadServer::onGetProviders(Message &msg) {
-    log_.info("{}", __FUNCTION__);
-
     if (msg.key.empty()) {
       return false;
     }
@@ -237,8 +217,6 @@ namespace libp2p::protocol::kademlia {
   }
 
   bool KadServer::onFindNode(Message &msg) {
-    log_.info("{}", __FUNCTION__);
-
     if (msg.closer_peers) {
       for (auto &p : msg.closer_peers.value()) {
         if (p.conn_status == Message::Connectedness::CAN_CONNECT) {
@@ -277,8 +255,6 @@ namespace libp2p::protocol::kademlia {
   }
 
   bool KadServer::onPing(Message &msg) {
-    log_.info("{}", __FUNCTION__);
-
     if (msg.closer_peers) {
       for (auto &p : msg.closer_peers.value()) {
         if (p.conn_status == Message::Connectedness::CAN_CONNECT) {

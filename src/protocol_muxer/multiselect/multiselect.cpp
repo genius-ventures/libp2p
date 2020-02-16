@@ -30,7 +30,6 @@ namespace libp2p::protocol_muxer {
     auto [write_buffer, read_buffer, index] = getBuffers();
 
     if (is_initiator) {
-      TRACE("in Multiselect::negotiate opening msg");
       MessageWriter::sendOpeningMsg(std::make_shared<ConnectionState>(
           connection, supported_protocols, handler, write_buffer, read_buffer,
           index, shared_from_this()));
@@ -51,7 +50,6 @@ namespace libp2p::protocol_muxer {
 
   void Multiselect::onWriteCompleted(
       std::shared_ptr<ConnectionState> connection_state) const {
-    TRACE("Multiselect onWriteCompleted, status={}", connection_state->status);
     MessageReader::readNextMessage(std::move(connection_state));
   }
 
@@ -78,8 +76,6 @@ namespace libp2p::protocol_muxer {
       case MessageType::NA:
         return handleNaMsg(connection_state);
       default:
-        log_->critical(
-            "type of the message, returned by the parser, is unknown");
         return negotiationRoundFailed(connection_state,
                                       MultiselectError::INTERNAL_ERROR);
     }
@@ -220,14 +216,12 @@ namespace libp2p::protocol_muxer {
 
   void Multiselect::onUnexpectedRequestResponse(
       const std::shared_ptr<ConnectionState> &connection_state) {
-    log_->info("got a unexpected request-response combination - sending 'ls'");
     negotiationRoundFailed(connection_state,
                            MultiselectError::PROTOCOL_VIOLATION);
   }
 
   void Multiselect::onGarbagedStreamStatus(
       const std::shared_ptr<ConnectionState> &connection_state) {
-    log_->critical("there is some garbage in stream state status");
     negotiationRoundFailed(connection_state, MultiselectError::INTERNAL_ERROR);
   }
 

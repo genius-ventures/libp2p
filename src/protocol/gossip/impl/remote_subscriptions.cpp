@@ -25,7 +25,6 @@ namespace libp2p::protocol::gossip {
                                              const TopicId &topic) {
     auto res = getItem(topic, subscribed);
     if (!res) {
-      log_.error("error in self subscribe to {}", topic);
       return;
     }
     TopicSubscriptions &subs = res.value();
@@ -33,8 +32,6 @@ namespace libp2p::protocol::gossip {
     if (subs.empty()) {
       table_.erase(topic);
     }
-    log_.debug("self {} {}",
-               (subscribed ? "subscribed to" : "unsubscribed from"), topic);
   }
 
   void RemoteSubscriptions::onPeerSubscribed(const PeerContextPtr &peer,
@@ -43,22 +40,17 @@ namespace libp2p::protocol::gossip {
     if (subscribed) {
       if (!peer->subscribed_to.insert(topic).second) {
         // request from wire, already subscribed, ignoring double subscription
-        log_.debug("peer {} already subscribed to {}", peer->str, topic);
         return;
       }
-      log_.debug("peer {} subscribing to {}", peer->str, topic);
     } else {
       if (peer->subscribed_to.erase(topic) == 0) {
         // was not subscribed actually, ignore
-        log_.debug("peer {} was not subscribed to {}", peer->str, topic);
         return;
       }
-      log_.debug("peer {} unsubscribing from {}", peer->str, topic);
     }
     auto res = getItem(topic, subscribed);
     if (!res) {
       // not error in this case, this is request from wire...
-      log_.debug("entry doesnt exist for {}", topic);
       return;
     }
     TopicSubscriptions &subs = res.value();
@@ -121,7 +113,6 @@ namespace libp2p::protocol::gossip {
     for (const auto &topic : msg->topic_ids) {
       auto res = getItem(topic, is_published_locally);
       if (!res) {
-        log_.error("error getting item for {}", topic);
         continue;
       }
       res.value().onNewMessage(from, msg, msg_id, now);
@@ -134,7 +125,6 @@ namespace libp2p::protocol::gossip {
       it->second.onHeartbeat(now);
       if (it->second.empty()) {
         // fanout interval expired - clean up
-        log_.debug("deleted entry for topic {}", it->first);
         it = table_.erase(it);
       } else {
         ++it;
@@ -157,7 +147,6 @@ namespace libp2p::protocol::gossip {
           [&topic](const PeerContextPtr &ctx) {
             return ctx->subscribed_to.count(topic) != 0;
           });
-      log_.debug("created entry for topic {}", topic);
       return item;
     }
     return boost::none;
