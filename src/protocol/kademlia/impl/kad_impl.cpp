@@ -8,8 +8,6 @@
 #include <libp2p/network/connection_manager.hpp>
 #include <libp2p/protocol/kademlia/impl/kad_server.hpp>
 
-#include <spdlog/spdlog.h>
-
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::protocol::kademlia, Error, e) {
   using E = libp2p::protocol::kademlia::Error;
   switch (e) {

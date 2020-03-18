@@ -8,9 +8,6 @@
 #define TRACE_ENABLED 1
 #include <libp2p/common/trace.hpp>
 
-#define SPDLOG_TRACE_ON
-#include <spdlog/spdlog.h>
-
 namespace libp2p::protocol_muxer {
   using peer::Protocol;
 

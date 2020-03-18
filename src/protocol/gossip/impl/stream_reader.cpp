@@ -14,8 +14,6 @@
 #define TRACE_ENABLED 1
 #include <libp2p/common/trace.hpp>
 
-#include <spdlog/spdlog.h>
-
 namespace libp2p::protocol::gossip {
 
   StreamReader::StreamReader(const Config &config,

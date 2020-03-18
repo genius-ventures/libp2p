@@ -12,8 +12,6 @@
 #include <libp2p/protocol/gossip/impl/message_builder.hpp>
 #include <libp2p/protocol/gossip/impl/remote_subscriptions.hpp>
 
-#include <spdlog/spdlog.h>
-
 namespace libp2p::protocol::gossip {
 
   // clang-format off
