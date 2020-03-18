@@ -16,6 +16,9 @@ set(CMAKE_TOOLCHAIN_FILE
 include("cmake/Hunter/init.cmake")
 project(libp2p C CXX)
 
+# Expose cmake modules for finding packages
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(TESTING "Build tests" ON)
