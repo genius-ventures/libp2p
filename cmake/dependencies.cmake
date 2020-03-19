@@ -14,8 +14,9 @@ endif()
 hunter_add_package(Boost COMPONENTS random filesystem program_options)
 find_package(Boost CONFIG REQUIRED  random filesystem program_options)
 
-# added from hunter_config
-hunter_add_package(GSL)
+# https://docs.hunter.sh/en/latest/packages/pkg/Microsoft.GSL.html
+hunter_add_package(Microsoft.GSL)
+find_package(Microsoft.GSL CONFIG REQUIRED)
 
 # https://www.openssl.org/
 hunter_add_package(OpenSSL)
